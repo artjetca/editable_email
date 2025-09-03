@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Plantilla Email - Casmara Beauty Advisor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .editor-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .preview-panel {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .editor-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: #2d3748;
+            margin-bottom: 25px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.95rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #667eea;
+            margin: 25px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 2px solid #d1d5db;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* Estilos del email preview */
+        .email-container {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .email-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+            padding: 0;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(255,255,255,0.05) 0%, transparent 50%);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: white;
+        }
+
+        .logo-section {
+            margin-bottom: 20px;
+        }
+
+        .logo-fallback {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .header-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            font-weight: 400;
+            opacity: 0.95;
+            letter-spacing: 0.5px;
+        }
+
+        .email-body {
+            padding: 50px 45px;
+            background: white;
+            position: relative;
+        }
+
+        .greeting {
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .client-name {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        .main-text {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: #4a5568;
+            margin-bottom: 35px;
+        }
+
+        .service-highlight {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 600;
+        }
+
+        .visit-details {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 35px 0;
+            position: relative;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        }
+
+        .visit-details::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+            border-radius: 16px 16px 0 0;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .detail-icon {
+            font-size: 1.5rem;
+            margin-right: 15px;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .detail-content {
+            flex: 1;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            color: #4a5568;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .additional-info {
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .status-section {
+            text-align: center;
+            margin: 35px 0;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1rem;
+            box-shadow: 0 8px 25px rgba(251, 191, 36, 0.3);
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+
+        .action-section {
+            text-align: center;
+            margin: 40px 0 30px;
+        }
+
+        .action-buttons-email {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-email {
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.4s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 160px;
+            justify-content: center;
+        }
+
+        .btn-confirm {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-reschedule {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .email-footer {
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            padding: 40px;
+            text-align: center;
+            color: white;
+        }
+
+        .footer-content {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .footer-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .footer-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            opacity: 0.9;
+            margin-bottom: 25px;
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 25px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #e5e7eb;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 8px 15px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .divider {
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            margin: 30px auto;
+            border-radius: 2px;
+        }
+
+        .copy-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .copy-notification.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .editor-panel {
+                position: relative;
+                top: 0;
+            }
+
+        @media (max-width: 768px) {
+            .email-body {
+                padding: 30px 25px;
+            }
+            
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons-email {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn-email {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .contact-info {
+                flex-direction: column;
+                gap: 15px;
+            }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Panel del Editor -->
+        <div class="editor-panel">
+            <h1 class="editor-title">Editor de Plantilla</h1>
+            
+            <div class="section-title">📋 Información del Cliente</div>
+            <div class="form-group">
+                <label class="form-label">Nombre del Cliente:</label>
+                <input type="text" id="clientName" class="form-input" value="[Nombre del Cliente]" oninput="updatePreview()">
+            </div>
+
+            <div class="section-title">📅 Detalles de la Visita</div>
+            <div class="form-group">
+                <label class="form-label">Fecha de la Visita:</label>
+                <input type="text" id="visitDate" class="form-input" value="[Fecha de la visita]" oninput="updatePreview()">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Hora Específica:</label>
+                <input type="text" id="visitTime" class="form-input" value="[Hora específica]" oninput="updatePreview()">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Dirección del Cliente:</label>
+                <textarea id="clientAddress" class="form-input form-textarea" oninput="updatePreview()">[Dirección del cliente]</textarea>
+            </div>
+
+            <div class="section-title">👩‍💼 Información de la Asesora</div>
+            <div class="form-group">
+                <label class="form-label">Nombre de la Asesora:</label>
+                <input type="text" id="advisorName" class="form-input" value="Charo - Casmara" oninput="updatePreview()">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Teléfono de Contacto:</label>
+                <input type="text" id="advisorPhone" class="form-input" value="+34 646 11 67 04" oninput="updatePreview()">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Email de Contacto:</label>
+                <input type="email" id="advisorEmail" class="form-input" value="rosariog.almenglo@gmail.com" oninput="updatePreview()">
+            </div>
+
+            <div class="section-title">📝 Texto Personalizado</div>
+            <div class="form-group">
+                <label class="form-label">Información Adicional:</label>
+                <textarea id="additionalInfo" class="form-input form-textarea" oninput="updatePreview()">Nuestra asesora comercial [ASESOR] llevará el equipo Beauty Advisor para realizar una demostración completa de la tecnología de análisis facial 3D. Puede contactarla directamente al [TELEFONO] para cualquier consulta.</textarea>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="copyHTML()">📋 Copiar HTML</button>
+                <button class="btn btn-secondary" onclick="resetForm()">🔄 Resetear</button>
+            </div>
+        </div>
+
+        <!-- Panel de Vista Previa -->
+        <div class="preview-panel">
+            <div id="emailPreview" class="email-container">
+                <!-- Header -->
+                <div class="email-header">
+                    <div class="header-pattern"></div>
+                    <div class="header-content">
+                        <div class="logo-section">
+                            <div class="logo-fallback">CASMARA</div>
+                        </div>
+                        <div class="header-title">Sistema de Notificaciones de Visita</div>
+                    </div>
+                </div>
+
+                <!-- Cuerpo del Email -->
+                <div class="email-body">
+                    <h2 style="font-family: 'Playfair Display', serif; font-size: 1.8rem; color: #2d3748; margin-bottom: 25px; text-align: center;">
+                        Recordatorio de Visita
+                    </h2>
+
+                    <div class="greeting">
+                        Estimado/a <span class="client-name">${clientName}</span>,
+                    </div>
+
+                    <p class="main-text">
+                        Le recordamos que tenemos programada una visita a sus instalaciones para presentar nuestros servicios de <strong class="service-highlight">diagnóstico facial Casmara Beauty Advisor</strong>.
+                    </p>
+
+                    <!-- Detalles de la Visita -->
+                    <div class="visit-details">
+                        <div class="details-grid">
+                            <div class="detail-item">
+                                <div class="detail-icon">📅</div>
+                                <div class="detail-content">
+                                    <div class="detail-label">Fecha</div>
+                                    <div class="detail-value" id="previewVisitDate">[Fecha de la visita]</div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-icon">🕐</div>
+                                <div class="detail-content">
+                                    <div class="detail-label">Hora</div>
+                                    <div class="detail-value" id="previewVisitTime">[Hora específica]</div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-icon">📍</div>
+                                <div class="detail-content">
+                                    <div class="detail-label">Ubicación</div>
+                                    <div class="detail-value" id="previewClientAddress">[Dirección del cliente]</div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-icon">👩‍💼</div>
+                                <div class="detail-content">
+                                    <div class="detail-label">Asesora Comercial</div>
+                                    <div class="detail-value" id="previewAdvisorName">Charo - Casmara</div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-icon">⏱️</div>
+                                <div class="detail-content">
+                                    <div class="detail-label">Duración estimada</div>
+                                    <div class="detail-value">45-60 minutos</div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-icon">📞</div>
+                                <div class="detail-content">
+                                    <div class="detail-label">Contacto directo</div>
+                                    <div class="detail-value" id="previewAdvisorPhone">+34 646 11 67 04</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información Adicional -->
+                    <div class="additional-info">
+                        <p id="previewAdditionalInfo">Nuestra asesora comercial Charo de Casmara llevará el equipo Beauty Advisor para realizar una demostración completa de la tecnología de análisis facial 3D. Puede contactarla directamente al +34 646 11 67 04 para cualquier consulta.</p>
+                    </div>
+
+                    <!-- Estado -->
+                    <div class="status-section">
+                        <div class="status-badge">
+                            <div class="status-dot"></div>
+                            Pendiente de Confirmación
+                        </div>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="action-section">
+                        <div class="action-buttons-email">
+                            <a href="#" class="btn-email btn-confirm">
+                                ✅ Confirmar Cita
+                            </a>
+                            <a href="#" class="btn-email btn-reschedule">
+                                📅 Reprogramar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="email-footer">
+                    <div class="footer-content">
+                        <h3 class="footer-title" id="previewFooterTitle">¿Necesita contactar con Charo?</h3>
+                        <p class="footer-text" id="previewFooterText">
+                            Si tiene alguna pregunta o necesita hacer algún cambio, no dude en contactar directamente con <strong>Charo</strong>, su asesora comercial de Casmara. Está disponible para ayudarle con cualquier consulta sobre la demostración del Beauty Advisor.
+                        </p>
+                        
+                        <div class="divider"></div>
+                        
+                        <div class="contact-info">
+                            <div class="contact-item">
+                                <span>📞</span>
+                                <span id="previewContactPhone">+34 646 11 67 04</span>
+                            </div>
+                            <div class="contact-item">
+                                <span>✉️</span>
+                                <span id="previewContactEmail">rosariog.almenglo@gmail.com</span>
+                            </div>
+                            <div class="contact-item">
+                                <span>💬</span>
+                                <span id="previewContactWhatsApp">WhatsApp Charo</span>
+                            </div>
+                        </div>
+                        
+                        <p style="margin-top: 30px; font-size: 0.85rem; opacity: 0.7;">
+                            © 2025 Casmara. Todos los derechos reservados.<br>
+                            <span id="previewCopyright">Asesora comercial: Charo | Tel: +34 646 11 67 04</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificación de copia -->
+    <div id="copyNotification" class="copy-notification">
+        ✅ HTML copiado al portapapeles
+    </div>
+
+    <script>
+        function updatePreview() {
+            const clientName = document.getElementById('clientName').value;
+            const visitDate = document.getElementById('visitDate').value;
+            const visitTime = document.getElementById('visitTime').value;
+            const clientAddress = document.getElementById('clientAddress').value;
+            const advisorName = document.getElementById('advisorName').value;
+            const advisorPhone = document.getElementById('advisorPhone').value;
+            const advisorEmail = document.getElementById('advisorEmail').value;
+            const additionalInfo = document.getElementById('additionalInfo').value;
+
+            // Actualizar vista previa
+            document.querySelector('.client-name').textContent = clientName;
+            document.getElementById('previewVisitDate').textContent = visitDate;
+            document.getElementById('previewVisitTime').textContent = visitTime;
+            document.getElementById('previewClientAddress').textContent = clientAddress;
+            document.getElementById('previewAdvisorName').textContent = advisorName;
+            document.getElementById('previewAdvisorPhone').textContent = advisorPhone;
+            document.getElementById('previewContactPhone').textContent = advisorPhone;
+            document.getElementById('previewContactEmail').textContent = advisorEmail;
+
+            // Actualizar información adicional con reemplazos
+            const advisorFirstName = advisorName.split(' - ')[0] || advisorName.split(' ')[0];
+            const processedInfo = additionalInfo
+                .replace(/\[ASESOR\]/g, advisorFirstName)
+                .replace(/\[TELEFONO\]/g, advisorPhone);
+            document.getElementById('previewAdditionalInfo').textContent = processedInfo;
+
+            // Actualizar footer
+            document.getElementById('previewFooterTitle').textContent = `¿Necesita contactar con ${advisorFirstName}?`;
+            document.getElementById('previewFooterText').innerHTML = 
+                `Si tiene alguna pregunta o necesita hacer algún cambio, no dude en contactar directamente con <strong>${advisorFirstName}</strong>, su asesora comercial de Casmara. Está disponible para ayudarle con cualquier consulta sobre la demostración del Beauty Advisor.`;
+            document.getElementById('previewContactWhatsApp').textContent = `WhatsApp ${advisorFirstName}`;
+            document.getElementById('previewCopyright').textContent = `Asesora comercial: ${advisorFirstName} | Tel: ${advisorPhone}`;
+        }
+
+        function copyHTML() {
+            // 獲取表單數據
+            const clientName = document.getElementById('clientName').value;
+            const visitDate = document.getElementById('visitDate').value;
+            const visitTime = document.getElementById('visitTime').value;
+            const clientAddress = document.getElementById('clientAddress').value;
+            const advisorName = document.getElementById('advisorName').value;
+            const advisorPhone = document.getElementById('advisorPhone').value;
+            const advisorEmail = document.getElementById('advisorEmail').value;
+            const additionalInfo = document.getElementById('additionalInfo').value;
+            
+            // 處理顧問姓名
+            const advisorFirstName = advisorName.split(' - ')[0] || advisorName.split(' ')[0];
+            
+            // 處理額外信息中的佔位符
+            const processedInfo = additionalInfo
+                .replace(/\[ASESOR\]/g, advisorFirstName)
+                .replace(/\[TELEFONO\]/g, advisorPhone);
+
+            const htmlContent = `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recordatorio de Visita - Casmara Beauty Advisor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #e1e7ef 100%); min-height: 100vh; padding: 40px 20px; }
+        .email-container { max-width: 650px; margin: 0 auto; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.2); }
+        .email-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); position: relative; overflow: hidden; padding: 0; height: 200px; display: flex; align-items: center; justify-content: center; }
+        .header-pattern { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(255,255,255,0.05) 0%, transparent 50%); animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-10px) rotate(2deg); } }
+        .header-content { position: relative; z-index: 2; text-align: center; color: white; }
+        .logo-section { margin-bottom: 20px; }
+        .logo-fallback { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 600; letter-spacing: 1px; }
+        .header-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 400; opacity: 0.95; letter-spacing: 0.5px; }
+        .email-body { padding: 50px 45px; background: white; position: relative; }
+        .greeting { font-size: 1.2rem; margin-bottom: 25px; color: #2d3748; line-height: 1.6; }
+        .client-name { background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 600; font-size: 1.25rem; }
+        .main-text { font-size: 1.05rem; line-height: 1.7; color: #4a5568; margin-bottom: 35px; }
+        .service-highlight { background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 600; }
+        .visit-details { background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 16px; padding: 30px; margin: 35px 0; position: relative; border-left: 4px solid #667eea; box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+        .visit-details::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #667eea, #764ba2, #667eea); border-radius: 16px 16px 0 0; }
+        .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .detail-item { display: flex; align-items: center; padding: 15px 20px; background: white; border-radius: 12px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid rgba(102, 126, 234, 0.1); }
+        .detail-icon { font-size: 1.5rem; margin-right: 15px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; color: white; flex-shrink: 0; }
+        .detail-content { flex: 1; }
+        .detail-label { font-weight: 600; color: #2d3748; font-size: 0.95rem; margin-bottom: 4px; }
+        .detail-value { color: #4a5568; font-size: 1rem; font-weight: 500; }
+        .additional-info { background: rgba(102, 126, 234, 0.05); border-radius: 12px; padding: 25px; margin: 30px 0; border: 1px solid rgba(102, 126, 234, 0.1); }
+        .status-section { text-align: center; margin: 35px 0; }
+        .status-badge { display: inline-flex; align-items: center; gap: 12px; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; padding: 12px 24px; border-radius: 25px; font-weight: 600; font-size: 1rem; box-shadow: 0 8px 25px rgba(251, 191, 36, 0.3); }
+        .status-dot { width: 12px; height: 12px; background: white; border-radius: 50%; animation: pulse-dot 2s infinite; }
+        @keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.2); } }
+        .action-section { text-align: center; margin: 40px 0 30px; }
+        .action-buttons-email { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+        .btn-email { padding: 15px 30px; border-radius: 50px; font-weight: 600; text-decoration: none; transition: all 0.4s ease; border: none; cursor: pointer; font-size: 1rem; position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 10px; min-width: 160px; justify-content: center; }
+        .btn-confirm { background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3); }
+        .btn-reschedule { background: linear-gradient(135deg, #667eea, #764ba2); color: white; box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3); }
+        .email-footer { background: linear-gradient(135deg, #1f2937 0%, #374151 100%); padding: 40px; text-align: center; color: white; }
+        .footer-content { max-width: 500px; margin: 0 auto; }
+        .footer-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin-bottom: 20px; color: white; }
+        .footer-text { font-size: 0.95rem; line-height: 1.6; opacity: 0.9; margin-bottom: 25px; }
+        .contact-info { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 25px; }
+        .contact-item { display: flex; align-items: center; gap: 10px; color: #e5e7eb; font-weight: 500; cursor: pointer; transition: all 0.3s ease; padding: 8px 15px; border-radius: 20px; background: rgba(255, 255, 255, 0.1); }
+        .divider { width: 60px; height: 2px; background: linear-gradient(90deg, #667eea, #764ba2); margin: 30px auto; border-radius: 2px; }
+        @media (max-width: 768px) { .email-body { padding: 30px 25px; } .details-grid { grid-template-columns: 1fr; } .action-buttons-email { flex-direction: column; align-items: center; } .btn-email { width: 100%; max-width: 300px; } .contact-info { flex-direction: column; gap: 15px; } }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <div class="header-pattern"></div>
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo-fallback">CASMARA</div>
+                </div>
+                <div class="header-title">Sistema de Notificaciones de Visita</div>
+            </div>
+        </div>
+        <div class="email-body">
+            <h2 style="font-family: 'Playfair Display', serif; font-size: 1.8rem; color: #2d3748; margin-bottom: 25px; text-align: center;">Recordatorio de Visita</h2>
+            <div class="greeting">Estimado/a <span class="client-name">` + clientName + `</span>,</div>
+            <p class="main-text">Le recordamos que tenemos programada una visita a sus instalaciones para presentar nuestros servicios de <strong class="service-highlight">diagnóstico facial Casmara Beauty Advisor</strong>.</p>
+            <div class="visit-details">
+                <div class="details-grid">
+                    <div class="detail-item"><div class="detail-icon">📅</div><div class="detail-content"><div class="detail-label">Fecha</div><div class="detail-value">` + visitDate + `</div></div></div>
+                    <div class="detail-item"><div class="detail-icon">🕐</div><div class="detail-content"><div class="detail-label">Hora</div><div class="detail-value">` + visitTime + `</div></div></div>
+                    <div class="detail-item"><div class="detail-icon">📍</div><div class="detail-content"><div class="detail-label">Ubicación</div><div class="detail-value">` + clientAddress + `</div></div></div>
+                    <div class="detail-item"><div class="detail-icon">👩‍💼</div><div class="detail-content"><div class="detail-label">Asesora Comercial</div><div class="detail-value">` + advisorName + `</div></div></div>
+                    <div class="detail-item"><div class="detail-icon">⏱️</div><div class="detail-content"><div class="detail-label">Duración estimada</div><div class="detail-value">45-60 minutos</div></div></div>
+                    <div class="detail-item"><div class="detail-icon">📞</div><div class="detail-content"><div class="detail-label">Contacto directo</div><div class="detail-value">` + advisorPhone + `</div></div></div>
+                </div>
+            </div>
+            <div class="additional-info"><p>` + processedInfo + `</p></div>
+            <div class="status-section"><div class="status-badge"><div class="status-dot"></div>Pendiente de Confirmación</div></div>
+            <div class="action-section">
+                <div class="action-buttons-email">
+                    <a href="#" class="btn-email btn-confirm">✅ Confirmar Cita</a>
+                    <a href="#" class="btn-email btn-reschedule">📅 Reprogramar</a>
+                </div>
+            </div>
+        </div>
+        <div class="email-footer">
+            <div class="footer-content">
+                <h3 class="footer-title">¿Necesita contactar con ` + advisorFirstName + `?</h3>
+                <p class="footer-text">Si tiene alguna pregunta o necesita hacer algún cambio, no dude en contactar directamente con <strong>` + advisorFirstName + `</strong>, su asesora comercial de Casmara. Está disponible para ayudarle con cualquier consulta sobre la demostración del Beauty Advisor.</p>
+                <div class="divider"></div>
+                <div class="contact-info">
+                    <div class="contact-item"><span>📞</span><span>` + advisorPhone + `</span></div>
+                    <div class="contact-item"><span>✉️</span><span>` + advisorEmail + `</span></div>
+                    <div class="contact-item"><span>💬</span><span>WhatsApp ` + advisorFirstName + `</span></div>
+                </div>
+                <p style="margin-top: 30px; font-size: 0.85rem; opacity: 0.7;">© 2025 Casmara. Todos los derechos reservados.<br>Asesora comercial: ` + advisorFirstName + ` | Tel: ` + advisorPhone + `</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
+
+            // Copiar al portapapeles
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(htmlContent).then(function() {
+                    showCopyNotification();
+                }).catch(function() {
+                    fallbackCopy(htmlContent);
+                });
+            } else {
+                fallbackCopy(htmlContent);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopyNotification();
+                } else {
+                    alert('No se pudo copiar. Por favor, seleccione y copie manualmente el texto.');
+                }
+            } catch (err) {
+                alert('Error al copiar. Por favor, copie manualmente el texto.');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        function showCopyNotification() {
+            const notification = document.getElementById('copyNotification');
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function resetForm() {
+            document.getElementById('clientName').value = '[Nombre del Cliente]';
+            document.getElementById('visitDate').value = '[Fecha de la visita]';
+            document.getElementById('visitTime').value = '[Hora específica]';
+            document.getElementById('clientAddress').value = '[Dirección del cliente]';
+            document.getElementById('advisorName').value = 'Charo - Casmara';
+            document.getElementById('advisorPhone').value = '+34 646 11 67 04';
+            document.getElementById('advisorEmail').value = 'rosariog.almenglo@gmail.com';
+            document.getElementById('additionalInfo').value = 'Nuestra asesora comercial [ASESOR] llevará el equipo Beauty Advisor para realizar una demostración completa de la tecnología de análisis facial 3D. Puede contactarla directamente al [TELEFONO] para cualquier consulta.';
+            updatePreview();
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePreview();
+        });
+    </script>
+</body>
+</html>
